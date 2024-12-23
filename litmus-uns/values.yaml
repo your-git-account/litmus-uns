@@ -4,31 +4,31 @@
 
 images:
   keycloak:
-    name: "us-east1-docker.pkg.dev/litmus-public/tahoe-dev/tahoe-keycloak"
+    name: "quay.io/litmusautomation/litmusuns/keycloak"
     tag: ""
     pullPolicy: IfNotPresent
   mqtt:
-    name: "us-east1-docker.pkg.dev/litmus-public/tahoe-dev/tahoe-mqtt"
+    name: "quay.io/litmusautomation/litmusuns/mqtt"
     tag: ""
     pullPolicy: IfNotPresent
   webui:
-    name: "us-east1-docker.pkg.dev/litmus-public/tahoe-dev/tahoe-webui"
+    name: "quay.io/litmusautomation/litmusuns/webui"
     tag: ""
     pullPolicy: IfNotPresent
   postgres:
-    name: "postgres"
+    name: "quay.io/litmusautomation/litmusuns/postgres"
     tag: "16.4"
     pullPolicy: IfNotPresent
   redis:
-    name: "redis"
+    name: "quay.io/litmusautomation/litmusuns/redis"
     tag: "7.2.4-alpine3.19"
     pullPolicy: IfNotPresent
   haproxy:
-    name: "haproxy"
+    name: "quay.io/litmusautomation/litmusuns/haproxy"
     tag: "2.8.9"
     pullPolicy: IfNotPresent
   curl:
-    name: "curlimages/curl"
+    name: "quay.io/litmusautomation/litmusuns/curl"
     tag: "8.7.1"
     pullPolicy: IfNotPresent
 
