@@ -32,8 +32,7 @@ images:
     tag: "8.7.1"
     pullPolicy: IfNotPresent
 
-imagePullSecrets:
-  - name: "litmusautomation-uns-centralportal-pull-secret"
+imagePullSecrets:[]
 
 secrets:
   create: true
