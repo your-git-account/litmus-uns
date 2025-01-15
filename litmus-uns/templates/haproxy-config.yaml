@@ -58,6 +58,10 @@ data:
       bind *:1882
       default_backend ws
 
+    frontend wss-in
+      bind *:8882
+      default_backend wss  
+
     backend web-ui-http
       mode tcp
       balance roundrobin
@@ -98,3 +102,9 @@ data:
       balance roundrobin
       option tcp-check
       server-template mqtt-ws {{ $backendCount }} mqtt-headless.{{ .Release.Namespace }}.svc.cluster.local:1882 check resolvers k8s init-addr last,libc,none inter 1s
+    
+    backend wss
+      mode tcp
+      balance roundrobin
+      option tcp-check
+      server-template mqtt-wss {{ $backendCount }} mqtt-headless.{{ .Release.Namespace }}.svc.cluster.local:8882 check resolvers k8s init-addr last,libc,none inter 1s
