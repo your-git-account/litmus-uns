@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "redis"
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: uns
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: uns
+        component: redis
+      {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.redis.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.redis.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: {{ .Values.redis.fsGroup }}
+      containers:
+      - name: redis
+        image: {{ .Values.images.redis.name }}:{{ .Values.images.redis.tag }}
+        imagePullPolicy: {{ .Values.images.redis.pullPolicy }}
+        ports:
+        - containerPort: 6379
+        securityContext:
+          {{- with .Values.redis.securityContext }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        env:
+        {{- $creds := printf "%s-creds" .Chart.Name }}
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ $creds }}
+              key: "REDIS_PASSWORD"
+        volumeMounts:
+        - mountPath: /data
+          subPath: data
+          name: redis-data
+        - name: tmpdir
+          subPath: "var/run"
+          mountPath: "/var/run"   
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc
+      - name: tmpdir
+        emptyDir:
+          sizeLimit: "500Mi"

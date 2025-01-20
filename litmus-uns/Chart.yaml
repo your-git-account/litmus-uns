@@ -1,0 +1,9 @@
+apiVersion: v2
+name: litmus-uns
+description: A Helm chart for Litmus UNS
+
+type: application
+
+version: 1.2.8-dev
+
+appVersion: "latest"

@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webui
+  namespace: {{ .Release.Namespace | quote }}  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uns
+      component: webui
+  template:
+    metadata:
+      labels:
+        app: uns
+        component: webui
+      {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.webui.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}    
+      annotations:  
+        checksum/secret: {{ include (print $.Template.BasePath "/tls-secret.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.webui.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}     
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: webui
+        image: {{ .Values.images.webui.name }}:{{ .Values.images.webui.tag  | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.images.webui.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+        securityContext:
+        {{- with .Values.webui.securityContext }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }} 
+        env:
+          - name: "KEYCLOAK_SERVER"
+            value: "http://keycloak.{{ .Release.Namespace }}.svc.cluster.local:8080"
+          - name: "MQTT_API_SERVER"
+            value: "http://haproxy.{{ .Release.Namespace }}.svc.cluster.local:8080"
+          - name: "MQTT_WS_SERVER"
+            value: "http://haproxy.{{ .Release.Namespace }}.svc.cluster.local:1882"
+          - name: "HTTP_PORT"
+            value: "8080"
+          - name: "HTTPS_PORT"
+            value: "8443"
+          - name: "KEYCLOAK_PROXY_SCHEME"
+            value: "https"
+          - name: "NGINX_ENVSUBST_TEMPLATE_DIR" 
+            value: {{ if .Values.ingress.enabled }}"/etc/nginx/http-templates"{{ else }}"/etc/nginx/templates"{{ end }}
+          - name: "KEYCLOAK_PROXY_HOST"
+            value: {{ if .Values.ingress.enabled }}{{ .Values.ingress.host | quote }}{{ else }}'$host'{{ end }}
+          - name: "KEYCLOAK_PROXY_PORT"
+            value: {{ if .Values.ingress.enabled }}"443"{{ else }}{{ .Values.service.ports.https | quote }}{{ end }}
+        volumeMounts:
+        - name: ssl-cert
+          mountPath: /etc/nginx/ssl/broker.pem
+          subPath: broker.pem
+          readOnly: true
+        - name: ssl-cert
+          mountPath: /etc/nginx/ssl/broker.key
+          subPath: broker.key
+          readOnly: true
+        - name: ssl-cert
+          mountPath: /etc/nginx/ssl/ca.pem
+          subPath: ca.pem
+          readOnly: true
+        - name: ssl-cert
+          mountPath: /etc/nginx/ssl/broker-ca-chain.pem
+          subPath: broker-ca-chain.pem
+          readOnly: true
+        - name: tmpdir
+          subPath: "var/run"
+          mountPath: "/var/run"
+        - name: tmpdir
+          subPath: "conf.d"
+          mountPath: "/etc/nginx/conf.d"
+        - name: tmpdir
+          subPath: "cache"
+          mountPath: "/var/cache/nginx"  
+      volumes:
+      - name: ssl-cert
+        secret:
+          secretName: {{ .Values.luns.tlsSecretName }}
+          items:
+          - key: tls.crt
+            path: broker.pem
+          - key: tls.key
+            path: broker.key
+          - key: ca.crt
+            path: ca.pem
+          - key: tls.crt
+            path: broker-ca-chain.pem 
+      - name: tmpdir
+        emptyDir:
+          sizeLimit: "1G"       
