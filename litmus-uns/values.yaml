@@ -61,7 +61,7 @@ service:
   annotations: {}
   ports:
     http: 80
-    https: 443
+    https: 8443
     mqtt: 1883
     mqtts: 8883
     mqttWs: 1882
