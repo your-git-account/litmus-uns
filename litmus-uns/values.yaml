@@ -96,7 +96,7 @@ podLabels: {}
 podAnnotations: {}
 
 luns:
-  createTlsSecret: true
+  createTlsSecret: false
   tlsSecretName: "luns-default-tls"
   tls:
     ttl: 390
