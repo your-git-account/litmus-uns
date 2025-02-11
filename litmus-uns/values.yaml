@@ -31,7 +31,7 @@ images:
 imagePullSecrets: []
 
 secrets:
-  create: true
+  create: false
 
 nameOverride: ""
 fullnameOverride: ""
@@ -61,7 +61,7 @@ service:
   annotations: {}
   ports:
     http: 80
-    https: 443
+    https: 8443
     mqtt: 1883
     mqtts: 8883
     mqttWs: 1882
@@ -96,7 +96,7 @@ podLabels: {}
 podAnnotations: {}
 
 luns:
-  createTlsSecret: true
+  createTlsSecret: false
   tlsSecretName: "luns-default-tls"
   tls:
     ttl: 390
