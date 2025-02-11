@@ -52,40 +52,41 @@ spec:
       {{- $creds := printf "%s-creds" .Chart.Name }}
       {{- $postgresHost := include "postgres.host" . }}
       {{- $postgresPort := include "postgres.port" . }}
-      - name: wait-for-postgres
-        image: {{ .Values.images.postgres.name }}:{{ .Values.images.postgres.tag }}
+      - name: mqtt-migrate
+        image: {{ .Values.images.mqtt.name }}:{{ .Values.images.mqtt.tag  | default .Chart.AppVersion }}
         imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
-        command:
-          - "sh"
-          - "-c"
-          - |
-            until pg_isready -U $POSTGRES_USER -d POSTGRES_DB -h {{ $postgresHost }} -p {{ $postgresPort }}; do
-              echo "Waiting for PostgreSQL to become ready..."
-              sleep 1
-            done
-            sleep 5
+        args: ["admin", "migrate", "up"]
         env:
-        - name: POSTGRES_PASSWORD
+        - name: MQTT_DB
           valueFrom:
             secretKeyRef:
               name: {{ $creds }}
-              key: "MQTT_ADMIN_PASSWORD"
-        - name: POSTGRES_USER
+              key: "MQTT_DB"
+        - name: MQTT_ADMIN_USER
           valueFrom:
             secretKeyRef:
               name: {{ $creds }}
               key: "MQTT_ADMIN_USER"
-        - name: POSTGRES_DB
+        - name: MQTT_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ $creds }}
-              key: "MQTT_DB"    
+              key: "MQTT_ADMIN_PASSWORD"
+        - name: MQTT_SCHEMA
+          valueFrom:
+            secretKeyRef:
+              name: {{ $creds }}
+              key: "MQTT_SCHEMA"
+        - name: DB_URL
+          value: "postgres://$(MQTT_ADMIN_USER):$(MQTT_ADMIN_PASSWORD)@{{ $postgresHost }}:{{ $postgresPort }}/$(MQTT_DB)?search_path=$(MQTT_SCHEMA)&sslmode=disable"
+        - name: REDIS_ENABLED
+          value: "true"
+        - name: REDIS_ADDR
+          value: 'redis.{{ .Release.Namespace }}.svc.cluster.local:6379'  
         securityContext:
-          runAsUser: 999
-          runAsGroup: 999
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          readOnlyRootFilesystem: true      
+          {{- with .Values.mqtt.securityContext }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
       containers:
       - name: mqtt
         image: {{ .Values.images.mqtt.name }}:{{ .Values.images.mqtt.tag  | default .Chart.AppVersion }}
