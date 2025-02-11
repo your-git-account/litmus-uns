@@ -1,7 +1,6 @@
 # Default values for litmus-uns.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
 images:
   keycloak:
     name: "us-east1-docker.pkg.dev/litmus-public/tahoe-dev/tahoe-keycloak"
