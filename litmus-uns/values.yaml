@@ -30,7 +30,7 @@ images:
 imagePullSecrets: []
 
 secrets:
-  create: false
+  create: true
 
 nameOverride: ""
 fullnameOverride: ""
@@ -95,7 +95,7 @@ podLabels: {}
 podAnnotations: {}
 
 luns:
-  createTlsSecret: false
+  createTlsSecret: true
   tlsSecretName: "luns-default-tls"
   tls:
     ttl: 390
