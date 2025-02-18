@@ -28,7 +28,9 @@ images:
     tag: "2.8.9"
     pullPolicy: IfNotPresent
 
-imagePullSecrets: []
+imagePullSecrets: [
+    name: "litmusautomation-uns-centralportal-pull-secret"
+  ]
 
 nameOverride: ""
 fullnameOverride: ""
