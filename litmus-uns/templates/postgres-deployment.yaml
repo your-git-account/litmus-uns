@@ -4,9 +4,6 @@ kind: Deployment
 metadata:
   name: postgres
   namespace: {{ .Release.Namespace | quote }}
-  annotations: {{- with .Values.postgres.annotations }}
-{{ toYaml . | indent 4 }}
-  {{- end }}
 spec:
   replicas: 1
   strategy:
@@ -20,12 +17,30 @@ spec:
       labels:
         app: uns
         component: postgres
+      {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.postgres.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.postgres.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}  
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       securityContext:
-        fsGroup: 999
+        fsGroup: {{ .Values.postgres.fsGroup }}
       initContainers:
         - name: set-fs-owner
           image: {{ .Values.images.postgres.name }}:{{ .Values.images.postgres.tag }}
+          imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -33,7 +48,7 @@ spec:
             - 'sh'
             - '-c'
             - |
-              chown -R 999:999 /var/lib/postgresql/data
+              chown -R {{ .Values.postgres.fsOwner }}:{{ .Values.postgres.fsGroup }} /var/lib/postgresql/data
           volumeMounts:
           - mountPath: /var/lib/postgresql/data
             name: postgres-storage
@@ -41,17 +56,13 @@ spec:
       containers:
       - name: postgres
         image: {{ .Values.images.postgres.name }}:{{ .Values.images.postgres.tag }}
+        imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
         ports:
         - containerPort: 5432
         securityContext:
-          runAsUser: 999
-          runAsGroup: 999
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
+          {{- with .Values.postgres.securityContext }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         livenessProbe:
           exec:
             command:

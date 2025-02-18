@@ -9,6 +9,10 @@ metadata:
 spec:
   template:
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       restartPolicy: OnFailure
       initContainers:
       {{- $creds := printf "%s-creds" .Chart.Name }}
@@ -16,6 +20,7 @@ spec:
       {{- $postgresPort := include "postgres.port" . }}
       - name: wait-for-postgres
         image: {{ .Values.images.postgres.name }}:{{ .Values.images.postgres.tag }}
+        imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
         command:
           - "sh"
           - "-c"
@@ -34,13 +39,26 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ .Values.postgres.external.secretName }}
-              key: "POSTGRES_USER"  
+              key: "POSTGRES_USER"
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true         
       containers:
       - name: extdb-init
         image: {{ .Values.images.postgres.name }}:{{ .Values.images.postgres.tag }}
+        imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
         command:
           - "/bin/bash"
           - "/scripts/extdb-init.sh"
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true   
         env:
         - name: POSTGRES_HOST
           value: {{ $postgresHost | quote }}
