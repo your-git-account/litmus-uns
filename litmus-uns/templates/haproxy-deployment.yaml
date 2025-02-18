@@ -13,25 +13,9 @@ spec:
       labels:
         app: uns
         component: haproxy
-      {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.haproxy.labels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}    
       annotations:  
-        checksum/config: {{ include (print $.Template.BasePath "/haproxy-config.yaml") . | sha256sum }}
-      {{- with .Values.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.haproxy.annotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}      
+        checksum/config: {{ include (print $.Template.BasePath "/haproxy-config.yaml") . | sha256sum }}     
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -47,7 +31,6 @@ spec:
       containers:
       - name: haproxy
         image: {{ .Values.images.haproxy.name }}:{{ .Values.images.haproxy.tag }}
-        imagePullPolicy: {{ .Values.images.haproxy.pullPolicy }}
         ports:
         - containerPort: 8080
         - containerPort: 8443
@@ -57,9 +40,14 @@ spec:
         - containerPort: 8404
         - containerPort: 8405
         securityContext:
-          {{- with .Values.haproxy.securityContext }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - name: config-volume
           mountPath: /usr/local/etc/haproxy

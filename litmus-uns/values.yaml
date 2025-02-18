@@ -4,20 +4,20 @@
 
 images:
   keycloak:
-    name: "us-east1-docker.pkg.dev/litmus-public/tahoe-dev/tahoe-keycloak"
+    name: "quay.io/litmusautomation/litmusuns/keycloak"
     tag: ""
     pullPolicy: IfNotPresent
   mqtt:
-    name: "us-east1-docker.pkg.dev/litmus-public/tahoe-dev/tahoe-mqtt"
+    name: "quay.io/litmusautomation/litmusuns/mqtt"
     tag: ""
     pullPolicy: IfNotPresent
   webui:
-    name: "us-east1-docker.pkg.dev/litmus-public/tahoe-dev/tahoe-webui"
+    name: "quay.io/litmusautomation/litmusuns/webui"
     tag: ""
     pullPolicy: IfNotPresent
   postgres:
     name: "postgres"
-    tag: "16.4"
+    tag: "16.1"
     pullPolicy: IfNotPresent
   redis:
     name: "redis"
@@ -29,9 +29,6 @@ images:
     pullPolicy: IfNotPresent
 
 imagePullSecrets: []
-
-secrets:
-  create: false
 
 nameOverride: ""
 fullnameOverride: ""
@@ -92,11 +89,8 @@ tolerations: []
 
 affinity: {}
 
-podLabels: {}
-podAnnotations: {}
-
 luns:
-  createTlsSecret: false
+  createTlsSecret: true
   tlsSecretName: "luns-default-tls"
   tls:
     ttl: 390
@@ -118,50 +112,15 @@ postgres:
     host: "postgres.local"
     port: 5432
     secretName: ext-db-creds
-  labels: {}
-  fsOwner: 999
-  fsGroup: 999
-  securityContext:
-    runAsUser: 999
-    runAsGroup: 999
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-      - ALL
 
 redis:
   storage:
     size: "10Gi"
-  labels: {}
-  annotations: {}
-  fsGroup: 1000
-  securityContext:
-    allowPrivilegeEscalation: false
-    runAsUser: 1000
-    runAsNonRoot: true
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-      - ALL
 
 mqtt:
   replicaCount: 3
   redisTopicsTTL: "24h"
   logLevel: "info"
-  labels: {}
-  annotations: {}
-  fsGroup: 1000
-  securityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-      - ALL
-    runAsNonRoot: true
-    runAsUser: 1000
-    runAsGroup: 1000
-    readOnlyRootFilesystem: true
 
 keycloak:
   realm: "standalone"
@@ -173,46 +132,10 @@ keycloak:
     limits:
       cpu: "1"
       memory: "700Mi"
-    ephemeral-storage: "500Mi"
-  labels: {}
-  annotations: {}
-  fsGroup: 1000
-  securityContext:
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    runAsUser: 1000
-    runAsGroup: 1000
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-      - ALL
+    ephemeral-storage: "500Mi"  
 
 haproxy:
   replicaCount: 2
   mqttDefaultBackendCount: 10
-  labels: {}
-  annotations: {}
-  securityContext:
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    runAsUser: 1000
-    runAsGroup: 1000
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-      - ALL
-
-webui:
-  labels: {}
-  annotations: {}
-  securityContext:
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    runAsUser: 1000
-    runAsGroup: 1000
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-      - ALL
 
 

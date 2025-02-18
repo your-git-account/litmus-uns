@@ -29,7 +29,7 @@ Thank you for installing the Litmus UNS chart.
 
 {{- $port:=.Values.service.ports.https | toString }}
   echo "Litmus UNS URL: https://$SERVICE_IP{{- if ne $port "443" }}:{{ .Values.service.ports.https }}{{ end }}/"
-  echo "Litmus UNS Keycloak Admin URL: https://$SERVICE_IP{{- if ne $port "443" }}:{{ .Values.service.ports.https }}{{ end }}/auth/admin"
+  echo "Litmus UNS URL: https://$SERVICE_IP{{- if ne $port "443" }}:{{ .Values.service.ports.https }}{{ end }}/auth/admin"
   echo "MQTT : mqtt://$SERVICE_IP:{{ .Values.service.ports.mqtt }}"
   echo "MQTTS : mqtt://$SERVICE_IP:{{ .Values.service.ports.mqtts }}"
 

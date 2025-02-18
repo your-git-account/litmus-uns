@@ -6,17 +6,16 @@ Litmus UNS is an UNS enabled MQTT broker
 
 ## TL;DR
 
-1. Obtain the Kubernetes pull secret from Litmus Automation.
-2. Submit the secret to the cluster using the following commands, changing `THE-SECRET_FILENAME` to the actual filename:
-   ```console
-   kubectl create namespace uns
-   kubectl create -f THE-SECRET_FILENAME --namespace=uns
-   ```
-3. Look up the secret name in the provided file, and use this name instead of `THE-SECRET-NAME` in the next command.
-4. Install Litmus UNS:
-   ```console
-   helm install uns oci://quay.io/litmusautomation/charts/litmus-uns --wait --namespace uns --set "imagePullSecrets[0].name=THE-SECRET-NAME"
-   ```
+1. Obtain the Kubernetes pull secret from Litmus Automation
+2. Submit the secret to the cluster using this command:
+```console
+kubectl create namespace uns
+kubectl create -f THE-SECRET_FILENAME --namespace=uns
+```
+3. Install Litmus UNS
+```console
+helm install uns oci://quay.io/litmusautomation/charts/litmus-uns --wait --namespace uns --set "imagePullSecrets[0].name=THE-SECRET-NAME"
+```
 
 ## Introduction
 
@@ -36,48 +35,15 @@ This chart bootstraps a [Litmus-UNS](https://litmus.io/litmus-uns/) deployment o
 kubectl create namespace uns
 kubectl create -f THE-SECRET_FILENAME --namespace=uns
 ```
-3. Look up the secret name in the provided file, and use this name instead of `THE-SECRET-NAME` in the next command.
-
-4. To install the chart with the release name `uns` in namespace `uns`:
+To install the chart with the release name `uns` in namespace `uns` and create the namespace:
 
 ```console
-helm install uns oci://quay.io/litmusautomation/charts/litmus-uns --wait --namespace uns --set "imagePullSecrets[0].name=THE-SECRET-NAME"
+helm install uns oci://quay.io/litmusautomation/charts/litmus-uns --namespace uns
 ```
 
 The command deploys Litmus UNS on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
-
-## Deploy with Argo CD
-
-Litmus UNS automatically generates passwords during deployment and stores them in a Kubernetes secret.
-This process is managed by the helm upgrade/install command. If a secret already exists, the existing value is used. Otherwise, a random password is generated and stored in the secret.
-
-However, Argo CD generates manifests using the helm template command and applies them to the cluster.
-This behavior results in random passwords being generated during every sync.
-
-To deploy the chart with Argo CD, please follow the steps below:
-
-* Pull the chart
-```
-helm pull oci://quay.io/litmusautomation/charts/litmus-uns --untar
-```
-
-* Generate and apply the secret before deployment
-
-It is assumed that the chart will be deployed in the namespace `uns` and the release name will be `uns`.
-```
-helm template -n uns uns litmus-uns --show-only templates/creds-secret.yaml | kubectl -n uns apply -f -
-```
-
-* Disable secret creation during deployment
-
-Deploy the chart with the following parameter:
-```
-secrets:
-  create: false
-```
-
 
 ## Configuration and Installation Details
 

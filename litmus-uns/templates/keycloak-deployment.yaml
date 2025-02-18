@@ -14,39 +14,65 @@ spec:
       labels:
         app: uns
         component: keycloak
-      {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.keycloak.labels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      annotations:
-      {{- with .Values.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.keycloak.annotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}   
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
-        fsGroup: {{ .Values.keycloak.fsGroup }}
+        fsGroup: 1000
+      initContainers:
       {{- $creds := printf "%s-creds" .Chart.Name }}
       {{- $postgresHost := include "postgres.host" . }}
-      {{- $postgresPort := include "postgres.port" . }}
+      {{- $postgresPort := include "postgres.port" . }}  
+      - name: wait-for-postgres
+        image: {{ .Values.images.postgres.name }}:{{ .Values.images.postgres.tag }}
+        command:
+          - "sh"
+          - "-c"
+          - |
+            until pg_isready -U $POSTGRES_USER -d POSTGRES_DB -h {{ $postgresHost }} -p {{ $postgresPort }}; do
+              echo "Waiting for PostgreSQL to become ready..."
+              sleep 1
+            done
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ $creds }}
+              key: "KEYCLOAK_PASSWORD"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ $creds }}
+              key: "KEYCLOAK_USER"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ $creds }}
+              key: "KEYCLOAK_DB"    
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
       containers:
       - name: keycloak
         image: {{ .Values.images.keycloak.name }}:{{ .Values.images.keycloak.tag  | default .Chart.AppVersion }}
         imagePullPolicy: {{ .Values.images.keycloak.pullPolicy }}
+        args: ["start", "--optimized", "--import-realm", "--metrics-enabled=true"]
         ports:
         - containerPort: 8080
         securityContext:
-          {{- with .Values.keycloak.securityContext }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         resources:
           requests:
             cpu: "{{ .Values.keycloak.resources.requests.cpu }}"
